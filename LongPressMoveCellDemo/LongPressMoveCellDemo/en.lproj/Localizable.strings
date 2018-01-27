@@ -1,0 +1,41 @@
+/* 
+  Localizable.strings
+  LongPressMoveCellDemo
+
+  Created by lever on 2018/1/8.
+  Copyright © 2018年 lever. All rights reserved.
+*/
+
+
+//############################### 首页 ###################################
+
+"TLC_Main_Finish_Project" = "已完成计划";
+"TLC_Main_All_Project" = "全部计划";
+"TLC_Main_All_Everyday_Project" = "每日计划";
+"TLC_Main_Header_Tip" = "请按事务的重要度，拖动调整优先级排序哦~";
+
+
+"TLC_Main_Today_To_Do" = "今日要做";
+"TLC_Main_Next_Step_To_Do" = "下一步要做";
+"TLC_Main_Later_To_Do" = "以后要做";
+"TLC_Main_New_Schedule" = "新建计划";
+
+"TLC_Main_Input_View_Cancel" = "取消";
+"TLC_Main_Input_View_Create" = "创建";
+"TLC_Main_Input_View_Placeholder" = "请输入计划内容";
+"TLC_Main_Key_Point" = "重点标记";
+"TLC_Main_No_Plan_Title" = "凡事预则立，不预则废";
+"TLC_Main_No_Plan_Detail_Title" = "快来创建你今天的计划吧~";
+"TLC_Project_No_Plan_Detail_title" = "还没有计划安排哦~";
+"TLC_Main_No_Plan_Detail_Create_Plan" = "快来创建你的计划吧~";
+
+//############################### 详情 ###################################
+
+"TLCDetailViewController_Project_Detail" = "计划详情";
+"TLCDetailViewController_Project_Edited" = "编辑计划";
+"TLCDetailViewController_Tip" = "提示";
+"TLCDetailViewController_Make_Sure_Save_This_Project" = "是否对该条计划进行保存";
+"TLCDetailViewController_Save" = "保存";
+"TLCDetailViewController_Cancel" = "取消";
+"TLCDetailViewController_Sure" = "确定";
+"TLCDetailViewController_Delete_This_Project" = "确定删除该计划吗？";
