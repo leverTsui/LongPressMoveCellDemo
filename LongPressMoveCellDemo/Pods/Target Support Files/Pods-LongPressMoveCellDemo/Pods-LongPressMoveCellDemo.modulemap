@@ -1,0 +1,6 @@
+framework module Pods_LongPressMoveCellDemo {
+  umbrella header "Pods-LongPressMoveCellDemo-umbrella.h"
+
+  export *
+  module * { export * }
+}
