@@ -42,7 +42,7 @@
         actualPage = round(rawPageValue);
     } 
     if (lround(actualPage) >= 1) {
-        proposedContentOffset.x -= 4;
+        proposedContentOffset.x -= 4.5;
     } 
     if (lround(actualPage) >= 2) {
         proposedContentOffset.x = self.collectionView.contentSize.width - TLCScreenWidth;
