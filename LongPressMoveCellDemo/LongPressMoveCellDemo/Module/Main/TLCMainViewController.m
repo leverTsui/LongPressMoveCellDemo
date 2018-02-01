@@ -172,10 +172,9 @@ static const CGFloat TLCMainViewControllerFlowLayoutWidthOffset = 45;
     self.view.backgroundColor = [UIColor whiteColor];
     self.title = TLCLocalizedString(@"TLC_Main_All_Everyday_Project");
     
+    self.automaticallyAdjustsScrollViewInsets = NO;
     if (@available(iOS 11.0, *)) {
         self.collectionView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
-    } else {
-        self.automaticallyAdjustsScrollViewInsets = NO;
     }
     self.edgesForExtendedLayout = UIRectEdgeNone;
     
