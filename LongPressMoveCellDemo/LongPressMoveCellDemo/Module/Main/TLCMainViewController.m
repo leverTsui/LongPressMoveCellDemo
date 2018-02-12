@@ -142,7 +142,6 @@ static const CGFloat TLCMainViewControllerFlowLayoutWidthOffset = 45;
     [self configurePageView];
     [self addPageSubviews];
     [self layoutPageSubviews];
-    [self addObserver];
     [self fetchPlanListData];
 }
 
@@ -157,12 +156,14 @@ static const CGFloat TLCMainViewControllerFlowLayoutWidthOffset = 45;
     
     [super viewWillAppear:animated];
     [self handleSingleTabBarViewControllers];
+    [self addObserverForKeybord];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
     
     [super viewWillDisappear:animated];
     [self.view endEditing:YES];
+    [self removeobserverForKeybord];
 }
 
 #pragma mark - UI & autolayout
@@ -179,6 +180,14 @@ static const CGFloat TLCMainViewControllerFlowLayoutWidthOffset = 45;
     self.edgesForExtendedLayout = UIRectEdgeNone;
     
     self.navigationItem.rightBarButtonItems = @[self.menuItem,self.remindSettingItem];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(onReceiveNotify:)
+                                                 name:TLCNotificationUpdatePlan object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(onReceiveNotify:)
+                                                 name:TLCNotificationDeletePlan object:nil];
 }
 
 - (void)addPageSubviews {
@@ -214,63 +223,85 @@ static const CGFloat TLCMainViewControllerFlowLayoutWidthOffset = 45;
 
 #pragma mark - keyboard observer
 
-- (void)addObserver {
+- (void)addObserverForKeybord {
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardWillShow:)
+                                                 name:UIKeyboardWillShowNotification
+                                               object:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(keyboardWillHide:)
-                                                 name:UIKeyboardWillHideNotification object:nil];
+                                                 name:UIKeyboardWillHideNotification
+                                               object:nil];
+}
+
+- (void)removeobserverForKeybord {
     
-    [[NSNotificationCenter defaultCenter]addObserver:self
-                                            selector:@selector(keyBoardWillChageFrame:)
-                                                name:UIKeyboardWillChangeFrameNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:UIKeyboardWillShowNotification
+                                                  object:nil];
     
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(onReceiveNotify:)
-                                                 name:TLCNotificationUpdatePlan object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:UIKeyboardWillHideNotification
+                                                  object:nil];
+}
+
+- (void)keyboardWillShow:(NSNotification *)notification {
     
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(onReceiveNotify:)
-                                                 name:TLCNotificationDeletePlan object:nil];
+    CGRect keyboardBounds;
+    [[notification.userInfo valueForKey:UIKeyboardFrameEndUserInfoKey] getValue:&keyboardBounds];
+    NSNumber *duration = [notification.userInfo objectForKey:UIKeyboardAnimationDurationUserInfoKey];
+    NSNumber *curve = [notification.userInfo objectForKey:UIKeyboardAnimationCurveUserInfoKey];
+    
+    keyboardBounds = [self.view convertRect:keyboardBounds toView:nil];
+    
+    [self.inputProjectView mas_updateConstraints:^(MASConstraintMaker *make) {
+        make.bottom.equalTo(self.view).offset(-CGRectGetHeight(keyboardBounds));
+    }];
+    
+    //设置动画
+    [UIView beginAnimations:nil context:NULL];
+    [UIView setAnimationBeginsFromCurrentState:YES];
+    [UIView setAnimationDuration:[duration doubleValue]];
+    [UIView setAnimationCurve:[curve intValue]];
+    
+    [self.inputProjectView layoutIfNeeded];
+    
+    [UIView commitAnimations];
 }
 
 - (void)keyboardWillHide:(NSNotification *)notification {
     
-    [self.inputProjectView resetText];
-    self.inputProjectView.frame = CGRectMake(0, TLCScreenHeight, TLCScreenWidth, 88);
-}
-
-- (void)keyBoardWillChageFrame:(NSNotification *)notification {
-    NSDictionary * infoDict = [notification userInfo];
-    
-    CGRect beginFrame = [[infoDict objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue];
-    CGRect endFrame = [[infoDict objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
-    
-    CGFloat offset_y = endFrame.origin.y - beginFrame.origin.y;
-    
-    UIWindow *keyWindow = [UIApplication sharedApplication].keyWindow;
-    CGFloat endHeight = TLCScreenHeight - [keyWindow TLCNavigationBarHeight];
-    
-    CGFloat projectInputViewBottom = 0;
-    if (offset_y<0) { //弹出键盘
-        if (endFrame.origin.y < endHeight) {
-            projectInputViewBottom = endHeight - endFrame.size.height;
-        } else {//避免一些 键盘在屏幕下方浮动的现象
-            projectInputViewBottom = endHeight;
-        }
-    }else{//键盘下移或消失
-        if (endFrame.origin.y >= endHeight) {//键盘完全消失
-            projectInputViewBottom = endHeight;
-        } else {//键盘只是变矮了一点
-            projectInputViewBottom = endHeight - endFrame.size.height;
-        }
+    if([self.inputProjectView inputText].length > 0) {
+        [self.inputProjectView resetText];
     }
     
-    CGFloat duration = [[infoDict objectForKey:UIKeyboardAnimationDurationUserInfoKey] floatValue];
-    CGFloat height = CGRectGetHeight(self.inputProjectView.frame);
+    CGRect keyboardBounds;
+    [[notification.userInfo valueForKey:UIKeyboardFrameEndUserInfoKey] getValue:&keyboardBounds];
+    NSNumber *duration = [notification.userInfo objectForKey:UIKeyboardAnimationDurationUserInfoKey];
+    NSNumber *curve = [notification.userInfo objectForKey:UIKeyboardAnimationCurveUserInfoKey];
     
-    [UIView animateWithDuration:duration animations:^{
-        self.inputProjectView.frame = CGRectMake(0, projectInputViewBottom-height, TLCScreenWidth, height);
+    keyboardBounds = [self.view convertRect:keyboardBounds toView:nil];
+    
+    [self.inputProjectView mas_updateConstraints:^(MASConstraintMaker *make) {
+        if (@available(iOS 11.0, *)) {
+            make.bottom.equalTo(self.view).offset(self.view.safeAreaInsets.bottom+88);
+        } else {
+            make.bottom.equalTo(self.view).offset(88);
+        }
+        make.height.mas_equalTo(88);
     }];
+    
+    //设置动画
+    [UIView beginAnimations:nil context:NULL];
+    [UIView setAnimationBeginsFromCurrentState:YES];
+    [UIView setAnimationDuration:[duration doubleValue]];
+    [UIView setAnimationCurve:[curve intValue]];
+    
+    [self.inputProjectView layoutIfNeeded];
+    
+    [UIView commitAnimations];
 }
 
 #pragma mark - network request
@@ -320,8 +351,18 @@ static const CGFloat TLCMainViewControllerFlowLayoutWidthOffset = 45;
     
     if (!self.inputProjectView.superview) {
         [self.view addSubview:self.inputProjectView];
+        
+        [self.inputProjectView mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.leading.trailing.equalTo(self.view);
+            if (@available(iOS 11.0, *)) {
+                make.bottom.equalTo(self.view).offset(self.view.safeAreaInsets.bottom+88);
+            } else {
+                make.bottom.equalTo(self.view).offset(88);
+            }
+            make.height.mas_equalTo(88);
+        }];
+        [self.inputProjectView layoutIfNeeded];
     }
-    self.inputProjectView.frame = CGRectMake(0, TLCScreenHeight, TLCScreenWidth, 88);
     self.inputProjectView.indexPath = indexPath;
     [self.inputProjectView textViewBecomeFirstResponder];
 }
@@ -547,6 +588,16 @@ static const CGFloat TLCMainViewControllerFlowLayoutWidthOffset = 45;
         [self.collectionView reloadItemsAtIndexPaths:@[indexPath]];
     }];
 }
+
+- (void)mainInputGrowingTextView:(MUIGrowingTextView *)growingTextView willChangeHeight:(CGFloat)height {
+    
+    CGFloat yOffset = height - CGRectGetHeight(growingTextView.frame);
+    CGRect inputProjectViewFrame = self.inputProjectView.frame;
+    [self.inputProjectView mas_updateConstraints:^(MASConstraintMaker *make) {
+        make.height.mas_equalTo(CGRectGetHeight(inputProjectViewFrame)+yOffset);
+    }];
+}
+
 
 #pragma mark - page scroll
 
