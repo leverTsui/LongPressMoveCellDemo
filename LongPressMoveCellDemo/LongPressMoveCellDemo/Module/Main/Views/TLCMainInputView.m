@@ -6,8 +6,7 @@
 //  Copyright © 2017年 ND. All rights reserved.
 //
 
-#import "TLCMainInputView.h"
-#import "MUIGrowingTextView.h"
+#import "TLCMainInputView.h" 
 #import <Masonry/Masonry.h>
 #import "TLCDefine.h"
 #import "UIColor+TLCAdd.h"
@@ -74,25 +73,20 @@
         make.width.equalTo(self.cancelButton);
         make.height.equalTo(self.cancelButton);
         make.trailing.equalTo(self).offset(-8);
-    }];
-    
-    [self setNeedsLayout];
-    [self layoutIfNeeded];
+    }]; 
 }
 
 #pragma mark - event response
 
 - (void)cancelButtonClicked:(UIButton *)sender {
-    [self.textView resignFirstResponder];
-    [self resetText];
+     [self retractKeyboard];
 }
 
 - (void)createButtonClicked:(UIButton *)sender {
     if (self.delegate && [self.delegate respondsToSelector:@selector(mainInputView:creatProjectAtIndexPath:)]) {
         [self.delegate mainInputView:self creatProjectAtIndexPath:self.indexPath];
     }
-    [self.textView resignFirstResponder];
-    [self resetText];
+    [self retractKeyboard];
 }
 
 #pragma mark - public
@@ -109,15 +103,22 @@
     self.textView.text = nil;
 }
 
+#pragma mark - private
+- (void)retractKeyboard {
+    
+    [self.textView resignFirstResponder];
+    if (self.textView.text.length > 0) {
+        [self resetText];
+    }
+}
+
 #pragma mark - MUIGrowingTextViewDelegate
 
 //高度自增长时的代理(将要修改高度)
 - (void)growingTextView:(MUIGrowingTextView *)growingTextView willChangeHeight:(float)height {
-    CGFloat yOffset = height - CGRectGetHeight(growingTextView.frame);
-    CGRect newFrame = self.frame;
-    newFrame.origin.y -= yOffset;
-    newFrame.size.height += yOffset;
-    self.frame = newFrame;
+    if (self.delegate && [self.delegate respondsToSelector:@selector(mainInputGrowingTextView:willChangeHeight:)]) {
+        [self.delegate mainInputGrowingTextView:growingTextView willChangeHeight:height>34 ? height:34];
+    }
 }
 
 - (void)growingTextViewDidChange:(MUIGrowingTextView *)growingTextView { 
@@ -127,7 +128,7 @@
  
 //高度自增长时的代理(已经修改高度)
 - (void)growingTextView:(MUIGrowingTextView *)growingTextView didChangeHeight:(float)height {
-    
+    [self layoutIfNeeded];
 }
 
 #pragma mark - getter & setter
@@ -149,6 +150,7 @@
         _textView.minNumberOfLines = 1;
         _textView.minHeight = 34;
         _textView.maxHeight = 70;
+        _textView.internalTextView.autocorrectionType = UITextAutocorrectionTypeYes;
         _textView.placeholder = TLCLocalizedString(@"TLC_Main_Input_View_Placeholder");
         _textView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         

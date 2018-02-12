@@ -7,12 +7,16 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "MUIGrowingTextView.h"
 
 @class TLCMainInputView;
 
 @protocol TLCMainInputViewDeletate<NSObject>
 
-- (void)mainInputView:(TLCMainInputView *)view creatProjectAtIndexPath:(NSIndexPath *)indexPath; 
+- (void)mainInputView:(TLCMainInputView *)view creatProjectAtIndexPath:(NSIndexPath *)indexPath;
+
+//高度自增长时的代理(将要修改高度)
+- (void)mainInputGrowingTextView:(MUIGrowingTextView *)growingTextView willChangeHeight:(CGFloat)height;
 
 @end
 
